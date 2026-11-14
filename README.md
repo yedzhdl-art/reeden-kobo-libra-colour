@@ -1,7 +1,7 @@
 # Reeden Kobo · Libra Colour 适配版
 
 > **这是一个派生作品，不是独立项目。**
-> 本仓库的全部基础 —— C 宿主、Flutter Embedder 接线、framebuffer 与刷新策略、电源与网络管理、安装器、SHA-256 校验与每次启动的完整性复核、72 项测试，以及大部分文档 —— 都来自 **[SSNQ/reeden-kobo](https://github.com/SSNQ/reeden-kobo) v0.7.8**（commit `677cc9f`）。我们做的只是「让这套已经很完整的兼容层在另一台机器上跑起来」：新增 4 个源文件、修改 14 个文件。没有原作者的工作，就不会有这个适配。完整的致谢与我们逐条参考过的资料，请见 **[NOTICE.md](NOTICE.md)**；相对上游的具体改动见 **[CHANGES.md](CHANGES.md)**。
+> 本仓库的全部基础 —— C 宿主、Flutter Embedder 接线、framebuffer 与刷新策略、电源与网络管理、安装器、SHA-256 校验与每次启动的完整性复核、72 项测试，以及大部分文档 —— 都来自 **[SSNQ/reeden-kobo](https://github.com/SSNQ/reeden-kobo) v0.7.8**（commit `677cc9f`）。我们做的只是「让这套已经很完整的兼容层在另一台机器上跑起来」：新增 4 个源文件、修改 15 个文件。没有原作者的工作，就不会有这个适配。完整的致谢与我们逐条参考过的资料，请见 **[NOTICE.md](NOTICE.md)**；相对上游的具体改动见 **[CHANGES.md](CHANGES.md)**。
 
 > **非官方 / Experimental**：这是社区兼容层，不是 Reeden 或 Kobo 官方产品，也不代表官方支持或背书。运行时会接管屏幕、触摸、电源与网络，并以 root 权限运行。开始前请备份书籍和笔记；不能保证断电、设备损坏或所有配置都可恢复。
 

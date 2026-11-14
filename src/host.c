@@ -346,7 +346,11 @@ static bool input_has(const unsigned long *bits,size_t words,unsigned code){
      event3 "bd71828-pwrkey"   -> power button only
    Prefer the node with the grip keys, NOT the one with KEY_POWER: the PMIC
    power node has no page keys and no usable orientation stream. Nothing here
-   is grabbed, so sleep/wake and Nickel keep working. */
+   is grabbed, so sleep/wake and Nickel keep working.
+   These helpers are only needed by the hardware-handoff path, which the
+   headless diagnostic build omits; keep them out of that build so -Werror
+   does not flag them as unused functions. */
+#ifndef REEDEN_HEADLESS_DIAGNOSTIC
 static int find_keys_device(char *path,size_t n){
     int best=-1,best_score=0;
     for(int i=0;i<32;i++){
@@ -397,6 +401,7 @@ static bool fd_reports_msc_raw(int fd){
     if(ioctl(fd,EVIOCGBIT(EV_MSC,sizeof(mb)),mb)<0)return false;
     return input_has(mb,INPUT_WORDS(MSC_MAX),MSC_RAW);
 }
+#endif /* !REEDEN_HEADLESS_DIAGNOSTIC */
 /* Fallback only: some boards publish no synthetic MSC_RAW orientation codes.
    The raw motion node is noisy, so it is opened read-only and never grabbed. */
 static int find_accel_device(const char *skip_path){
