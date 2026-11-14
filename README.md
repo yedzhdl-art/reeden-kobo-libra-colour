@@ -1,7 +1,7 @@
 # Reeden Kobo · Libra Colour 适配版
 
 > **这是一个派生作品，不是独立项目。**
-> 本仓库的全部基础 —— C 宿主、Flutter Embedder 接线、framebuffer 与刷新策略、电源与网络管理、安装器、SHA-256 校验、55 项测试，以及大部分文档 —— 都来自 **[SSNQ/reeden-kobo](https://github.com/SSNQ/reeden-kobo) v0.7.7**（commit `a6f2c9d`）。我们做的只是「让这套已经很完整的兼容层在另一台机器上跑起来」：新增 4 个源文件、修改 14 个文件。没有原作者的工作，就不会有这个适配。完整的致谢与我们逐条参考过的资料，请见 **[NOTICE.md](NOTICE.md)**；相对上游的具体改动见 **[CHANGES.md](CHANGES.md)**。
+> 本仓库的全部基础 —— C 宿主、Flutter Embedder 接线、framebuffer 与刷新策略、电源与网络管理、安装器、SHA-256 校验与每次启动的完整性复核、72 项测试，以及大部分文档 —— 都来自 **[SSNQ/reeden-kobo](https://github.com/SSNQ/reeden-kobo) v0.7.8**（commit `677cc9f`）。我们做的只是「让这套已经很完整的兼容层在另一台机器上跑起来」：新增 4 个源文件、修改 14 个文件。没有原作者的工作，就不会有这个适配。完整的致谢与我们逐条参考过的资料，请见 **[NOTICE.md](NOTICE.md)**；相对上游的具体改动见 **[CHANGES.md](CHANGES.md)**。
 
 > **非官方 / Experimental**：这是社区兼容层，不是 Reeden 或 Kobo 官方产品，也不代表官方支持或背书。运行时会接管屏幕、触摸、电源与网络，并以 root 权限运行。开始前请备份书籍和笔记；不能保证断电、设备损坏或所有配置都可恢复。
 
@@ -13,7 +13,7 @@
 
 在 **Kobo Libra Colour（产品码 390）** 上，原字节运行官方 **Reeden Kindle `1.43.2+791`** 核心。上游原本只支持 Clara Colour（393），两者屏幕尺寸、触摸变换、输入节点布局和陀螺仪行为都不同，因此做了最小范围的适配。
 
-| | 上游 v0.7.7 | 本适配版 |
+| | 上游 v0.7.8 | 本适配版 |
 | --- | --- | --- |
 | 实测设备 | Clara Colour `393` | **Libra Colour `390`**（固件 `4.46.23836`） |
 | 屏幕 | 1072×1448 | **1264×1680，32bpp，stride 5056** |
@@ -34,7 +34,8 @@
 - eInk 分区刷新、彩色/灰度波形、夜间模式、电源键睡眠与唤醒、Wi-Fi 桥接；
 - 与 Nickel 的显示/输入交接、软恢复 `recover.sh`、会话守护、断电恢复；
 - NickelMenu 集成（启动 / 完整性检查 / 返回主界面）；
-- 安装前预检、480 文件 SHA-256 回读校验、升级保留旧副本与阅读数据、一键卸载；
+- 安装前预检、485 文件 SHA-256 回读校验、升级保留旧副本与阅读数据、一键卸载；
+- **v0.7.8 新增**：每次启动重新核对完整性，缺失的 `core/data/` / `ui-assets/` 资源可从本地生成并已校验的归档里逐项恢复；自检显示实际版本并列出具体失败文件。文件内容被改动、恢复归档损坏或程序文件缺失仍会拒绝启动。本适配原样保留这套机制，未改动其判断逻辑；
 - 退出手势、SSH 诊断工具（默认不开启）等，详见上游 [README](https://github.com/SSNQ/reeden-kobo#readme) 与 `docs/`。
 
 ### 2.2 本适配新增
@@ -107,7 +108,7 @@ USB 写入后 Kobo 的 FAT 缓存可能把已执行过的 `run.sh` 回滚（甚�
 | 启动 | 原生主界面 → 右下角 NickelMenu → **Reeden Kobo (test)** |
 | 正常退出 | 同时按住屏幕左上角与右上角约 2 秒 |
 | 软件恢复 | NickelMenu → **Reeden Kobo - Return Home**；有 SSH 时可执行 `sh /mnt/onboard/.adds/reeden-kobo/recover.sh` |
-| 完整性检查 | NickelMenu → **Reeden Kobo - Check** |
+| 完整性检查 | NickelMenu → **Reeden Kobo - Check**（v0.7.8 起显示实际安装版本与具体失败文件） |
 | 完全无响应 | 长按电源键强制关机/开机，必要时先接 USB 充电 |
 | 卸载 | 先退出 Reeden → 连接 USB → 双击「一键卸载」脚本（默认保留完整备份） |
 
@@ -138,12 +139,14 @@ USB 写入后 Kobo 的 FAT 缓存可能把已执行过的 `run.sh` 回滚（甚�
 | `launcher.log` | 启动流程、机型、framebuffer、交接与恢复 |
 | `current.log` / `previous.log` | 宿主运行日志（按键、旋转、刷新） |
 | `input-devices.log` | 每次启动的 `/proc/bus/input/devices` 快照与 fb rotate |
+| `install-verification.log` | v0.7.8 起每次启动的完整性复核结果 |
 | `guardian.log` / `power.log` | 守护与电源状态 |
 
 | 现象 | 先查 |
 | --- | --- |
 | 点菜单完全没反应 | `run.sh` / `start.sh` 是否被 FAT 缓存回滚成空文件；用 `sha256sum -c SHA256SUMS` 核对 |
 | 升级后功能没变化 | 是否做了「完全关机 → 开机」；日志是否写进了 `reeden-kobo-backup-*` 旧目录 |
+| 提示完整性校验失败 | `install-verification.log` 里列出的具体文件；v0.7.8 会自动恢复缺失资源，程序文件缺失仍需重装 |
 | 翻页键没反应 | `current.log` 里有没有 `[buttons] key code=...` 与 `turn=next/prev` |
 | 自动旋转没反应 | `[orient] gyro reports portrait ...`、`[orient] rotation=...` |
 | 触摸与画面上下左右相反 | `input-devices.log` 里 fb rotate 是否被归一化为 `3` |
@@ -157,6 +160,7 @@ USB 写入后 Kobo 的 FAT 缓存可能把已执行过的 `run.sh` 回滚（甚�
 
 - 只在 **Libra Colour 390 / 固件 4.46.23836** 上实机验证；393 保留了白名单但本适配路径未验证，其他机型明确拒绝。
 - 自动旋转只做竖屏 0° / 180°，不处理横屏；依赖 `ntx_io` 合成事件，驱动静默时改用原始加速度计（灵敏度较低）。
+- v0.7.8 的完整性复核会在**每次启动**核对全部安装文件，启动比 v0.7.7 略慢；资源恢复只补回缺失文件，不覆盖已有内容。
 - 文字残影、夜间彩色刷新、动画等沿用上游状态，未在本轮重新验证。
 - 需要 root 并接管硬件；升级、断电、强制关机都可能影响阅读数据，请自行备份。
 - 这不是对上游的改进建议，也未向上游提交合并；如原作者认为不妥，我们愿意按其意见调整或撤下。
@@ -168,4 +172,4 @@ USB 写入后 Kobo 的 FAT 缓存可能把已执行过的 `run.sh` 回滚（甚�
 - 适配层代码沿用上游 **MIT**（`LICENSE`，`Copyright (c) 2026 Reeden Kobo port contributors`），版权声明与许可全文已完整保留。
 - 官方 Reeden 核心、Flutter 引擎、cJSON、字体、Mozilla CA、Debian 运行库**各自保留原许可**，且大多不在本仓库分发。
 - 逐条致谢与引用：**[NOTICE.md](NOTICE.md)**；相对上游的改动：**[CHANGES.md](CHANGES.md)**。
-- 上游原仓库：<https://github.com/SSNQ/reeden-kobo>　上游 v0.7.7 发布页：<https://github.com/SSNQ/reeden-kobo/releases/tag/v0.7.7>
+- 上游原仓库：<https://github.com/SSNQ/reeden-kobo>　上游 v0.7.8 发布页：<https://github.com/SSNQ/reeden-kobo/releases/tag/v0.7.8>

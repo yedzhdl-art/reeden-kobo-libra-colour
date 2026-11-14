@@ -2,25 +2,28 @@
 
 这份文档想认真说清楚一件事：**这个仓库里绝大部分东西不是我们写的。**
 
-它只是把 [SSNQ](https://github.com/SSNQ) 的 [reeden-kobo](https://github.com/SSNQ/reeden-kobo) v0.7.7 从 Kobo Clara Colour 搬到 Kobo Libra Colour 上。真正难的那些工作 —— 用 C 宿主接住 Flutter Embedder、把官方闭源核心原字节跑起来、eInk 的分区刷新与波形、电源与睡眠状态机、跟 Nickel 交接显示和输入、跨三套操作系统的一键安装器、480 文件哈希校验、55 项回归测试、以及那份写得非常克制的合规声明 —— 全部是原作者已经做完并公开发布的。我们新增的只有 4 个源文件，改动 14 个文件，做的事情本质上是「在另一台机器上把输入节点和屏幕尺寸对上」。
+它只是把 [SSNQ](https://github.com/SSNQ) 的 [reeden-kobo](https://github.com/SSNQ/reeden-kobo) v0.7.8 从 Kobo Clara Colour 搬到 Kobo Libra Colour 上。真正难的那些工作 —— 用 C 宿主接住 Flutter Embedder、把官方闭源核心原字节跑起来、eInk 的分区刷新与波形、电源与睡眠状态机、跟 Nickel 交接显示和输入、跨三套操作系统的一键安装器、485 文件哈希校验与每次启动的完整性复核、72 项回归测试、以及那份写得非常克制的合规声明 —— 全部是原作者已经做完并公开发布的。我们新增的只有 4 个源文件，改动 14 个文件，做的事情本质上是「在另一台机器上把输入节点和屏幕尺寸对上」。
 
 如果没有这个上游项目，就不会有这次适配。谢谢 SSNQ 把它开源出来，也谢谢他把许可边界写得那么清楚，让后来的人可以放心地改、也知道什么不该碰。
 
+也特别想谢谢原作者在 v0.7.8 里对待问题的态度：针对「安装后少量文件校验失败、无法启动」的反馈，他没有把第三方环境的偶发现象含糊地宣布为「已修复」，而是在[发布说明](https://github.com/SSNQ/reeden-kobo/blob/v0.7.8/docs/releases/v0.7.8.md)里明确写出「本轮全新安装没有复现，故不将唯一根因宣称为已查明」，同时仍老老实实补上了受校验保护的资源恢复归档、每次启动的完整性复核和能列出具体失败文件的自检；并且清楚地标注了实机验证只覆盖 393 / 固件 4.46.23836，未测的固件不推断已覆盖。这种不夸大、不含糊的写法，对我们排查这台 390 上的一系列怪问题帮助很大 —— 我们后来所有「先看日志再说」的做法，某种意义上都是跟着这份说明学的。
+
 ---
 
-## 一、直接基于：SSNQ/reeden-kobo v0.7.7
+## 一、直接基于：SSNQ/reeden-kobo v0.7.8
 
 - 仓库：<https://github.com/SSNQ/reeden-kobo>
-- 版本：`v0.7.7`，commit `a6f2c9d5b8d3f3fa6782fd68658c3e0964228dc6`（2026-11-04，*Release v0.7.7 with legacy core and uninstall validation fixes*）
+- 版本：`v0.7.8`，tag 对象 `2a4024be04b3a5cceac0c355e15cac587a767570`，对应 commit `677cc9f1b1e92df7a50f42e1d5ea951dd66b5946`（2026-11-05，*Document successful six-resource recovery and startup verification on Kobo*）
+- 发布说明：[docs/releases/v0.7.8.md](https://github.com/SSNQ/reeden-kobo/blob/v0.7.8/docs/releases/v0.7.8.md)
 - 许可：**MIT**，`Copyright (c) 2026 Reeden Kobo port contributors`，许可全文见本仓库 [`LICENSE`](LICENSE)，版权声明原样保留。
 
-**直接沿用、未作改动的部分**（列举主要项，非穷尽）：`src/display.c` 与刷新策略、`src/power*.c`、`src/runtime*.c`、Flutter Embedder 接线、触摸协议 A/B 处理、`scripts/native-session.sh` / `power.sh` / `wifi.sh` 的主体、安装器整体架构与校验逻辑、`tests/` 里绝大多数测试、`docs/` 里的兼容性记录与开发笔记、一键安装/卸载脚本、以及 [README](https://github.com/SSNQ/reeden-kobo#readme) 中的合规与使用框架（本仓库说明文档的安装、卸载、排障章节在其基础上改写）。
+**直接沿用、未作改动的部分**（列举主要项，非穷尽）：`src/display.c` 与刷新策略、`src/power*.c`、`src/runtime*.c`、Flutter Embedder 接线、触摸协议 A/B 处理、`scripts/native-session.sh` / `power.sh` / `wifi.sh` 的主体、安装器整体架构与校验逻辑、`scripts/integrity.sh` 与 `tests/resource_recovery_test.py`（均为 v0.7.8 新增，原样保留）、`docs/` 里的兼容性记录与开发笔记、`tests/` 里绝大多数测试、一键安装/卸载脚本、以及 [README](https://github.com/SSNQ/reeden-kobo#readme) 中的合规与使用框架（本仓库说明文档的安装、卸载、排障章节在其基础上改写）。
 
 本仓库的 `LICENSE` 文件末尾那句说明也来自上游，我们原样保留：
 
 > *This license covers only the newly written adapter. Official Reeden binaries, Flutter headers, cJSON, fonts and runtime libraries retain their own licenses.*
 
-**我们实际新增/修改的内容**见 [`CHANGES.md`](CHANGES.md)，主要是：`src/buttons.{c,h}`、`src/orientation.{c,h}`，以及对 `host.c` / `input.c` / `fb_guard.c` / 机型白名单 / 启动脚本的最小改动。
+**我们实际新增/修改的内容**见 [`CHANGES.md`](CHANGES.md)，主要是：`src/buttons.{c,h}`、`src/orientation.{c,h}`，以及对 `host.c` / `input.c` / `fb_guard.c` / 机型白名单 / 启动脚本的最小改动。上游 v0.7.8 相对 v0.7.7 的 13 处变更（资源恢复归档、每次启动完整性复核、自检显示实际版本、安装器 `os.sync()` 等）已完整合并进来，一处未丢。
 
 ---
 
