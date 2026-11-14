@@ -36,7 +36,7 @@
 | **Debian Bullseye armhf 运行库** | 各库原有许可 | 安装脚本从 Debian 官方镜像在本地组包，**不在本仓库分发** |
 | **Zig 0.13.0** | MIT | 仅构建期用于 ARMHF 交叉编译，不随安装包分发；一键安装不需要 Zig |
 
-上游的 [`docs/依赖安全维护.md`](https://github.com/SSNQ/reeden-kobo/blob/main/docs/%E4%BE%9D%E8%B5%96%E5%AE%89%E5%85%A8%E7%BB%B4%E6%8A%A4.md) 说明了这些依赖的来源与维护边界，本适配未改变该策略。
+上游的 [`docs/依赖安全维护.md`](docs/依赖安全维护.md) 说明了这些依赖的来源与维护边界，本适配未改变该策略（该文档随上游一并保留在本仓库）。
 
 ---
 
